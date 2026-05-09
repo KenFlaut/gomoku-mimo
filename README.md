@@ -82,18 +82,18 @@
 
 ### 方法一：直接打开
 
-1. 下载 gomoku.html 文件
+1. 下载 gomoku-mimo.html 文件
 2. 双击文件，使用浏览器打开
 3. 开始游戏！
 
 ### 方法二：拖拽打开
 
-1. 将 gomoku.html 文件拖拽到浏览器窗口
+1. 将 gomoku-mimo.html 文件拖拽到浏览器窗口
 2. 游戏自动加载
 
 ### 方法三：右键打开
 
-1. 右键点击 gomoku.html 文件
+1. 右键点击 gomoku-mimo.html 文件
 2. 选择"打开方式" -> 选择任意浏览器
 
 推荐使用 Chrome、Firefox、Edge 等现代浏览器获得最佳体验。
