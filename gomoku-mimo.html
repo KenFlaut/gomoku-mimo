@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .board-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .board-wrapper {
+            position: relative;
+            background: #DEB887;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        canvas {
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .control-panel {
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .player-row.active {
+            background: #d4edda;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .player-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .stone-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        .stone-black {
+            background: #000;
+        }
+
+        .stone-white {
+            background: #fff;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .timer-display {
+            text-align: center;
+            padding: 15px;
+            background: #343a40;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .timer-time {
+            font-family: 'Courier New', monospace;
+            font-size: 42px;
+            font-weight: bold;
+            color: #28a745;
+            transition: color 0.3s;
+        }
+
+        .timer-time.warning {
+            color: #ffc107;
+        }
+
+        .timer-time.danger {
+            color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .timer-limit {
+            color: #adb5bd;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .record-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            background: #fff;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .record-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .record-list::-webkit-scrollbar-thumb {
+            background: #adb5bd;
+            border-radius: 3px;
+        }
+
+        .record-item {
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .record-item:nth-child(odd) {
+            background: #f8f9fa;
+        }
+
+        .record-number {
+            color: #6c757d;
+            min-width: 40px;
+        }
+
+        .record-player {
+            font-weight: bold;
+            min-width: 80px;
+        }
+
+        .record-player.black {
+            color: #333;
+        }
+
+        .record-player.white {
+            color: #6c757d;
+        }
+
+        .record-pos {
+            color: #007bff;
+            min-width: 40px;
+        }
+
+        .record-time {
+            color: #28a745;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .export-buttons .btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        /* 模态对话框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 380px;
+            max-width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .modal-message {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-buttons .btn {
+            min-width: 120px;
+            padding: 12px 25px;
+            font-size: 16px;
+        }
+
+        /* 设置对话框 */
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .time-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .time-preset {
+            padding: 6px 12px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .time-preset:hover {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="board-section">
+            <div class="title">🎮 五子棋游戏</div>
+            <div class="board-wrapper">
+                <canvas id="boardCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="panel-section">
+                <div class="section-title">👥 玩家信息</div>
+                <div class="player-info">
+                    <div class="player-row active" id="blackPlayer">
+                        <div class="player-name">
+                            <div class="stone-indicator stone-black"></div>
+                            <span id="blackName">黑棋</span>
+                        </div>
+                        <div class="score" id="blackScore">0</div>
+                    </div>
+                    <div class="player-row" id="whitePlayer">
+                        <div class="player-name">
+                            <div class="stone-indicator stone-white"></div>
+                            <span id="whiteName">白棋</span>
+                        </div>
+                        <div class="score" id="whiteScore">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">⏱ 计时器</div>
+                <div class="timer-display">
+                    <div class="timer-time" id="timerDisplay">01:00</div>
+                    <div class="timer-limit" id="timerLimit">每步限时: 60秒</div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">🎯 游戏操作</div>
+                <div class="buttons-grid">
+                    <button class="btn btn-primary" onclick="newGame()">新游戏</button>
+                    <button class="btn btn-warning" onclick="undoMove()">悔棋</button>
+                    <button class="btn btn-danger" onclick="resign()">认输</button>
+                    <button class="btn btn-secondary" onclick="showSettings()">设置</button>
+                </div>
+            </div>
+
+            <div class="panel-section" style="flex: 1;">
+                <div class="section-title">📝 对局记录</div>
+                <div class="record-list" id="recordList"></div>
+                <div class="export-buttons">
+                    <button class="btn btn-secondary" onclick="exportTXT()">📄 导出TXT</button>
+                    <button class="btn btn-secondary" onclick="exportJSON()">📋 导出JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 获胜/平局提示对话框 -->
+    <div class="modal-overlay" id="gameOverModal">
+        <div class="modal">
+            <div class="modal-icon" id="modalIcon">🎉</div>
+            <div class="modal-title" id="modalTitle">游戏结束</div>
+            <div class="modal-message" id="modalMessage">恭喜！黑棋获胜！</div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeGameOverModal()">返回</button>
+                <button class="btn btn-primary" onclick="startNewGameFromModal()">开始下一局</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置对话框 -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-title" style="text-align: center;">⚙️ 游戏设置</div>
+            <div class="form-group">
+                <label>黑棋玩家名称</label>
+                <input type="text" id="inputBlackName" value="黑棋">
+            </div>
+            <div class="form-group">
+                <label>白棋玩家名称</label>
+                <input type="text" id="inputWhiteName" value="白棋">
+            </div>
+            <div class="form-group">
+                <label>每步思考时间（秒）</label>
+                <input type="number" id="inputTimeLimit" value="60" min="10" max="600">
+                <div class="time-presets">
+                    <button class="time-preset" onclick="setTimeLimit(30)">30秒</button>
+                    <button class="time-preset" onclick="setTimeLimit(60)">60秒</button>
+                    <button class="time-preset" onclick="setTimeLimit(120)">120秒</button>
+                    <button class="time-preset" onclick="setTimeLimit(180)">180秒</button>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeSettings()">取消</button>
+                <button class="btn btn-primary" onclick="saveSettings()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 游戏常量 ====================
+        const BOARD_SIZE = 15;
+        const CELL_SIZE = 36;
+        const BOARD_PADDING = 30;
+        const STONE_RADIUS = 15;
+
+        // ==================== 游戏状态 ====================
+        let board = [];
+        let moveHistory = [];
+        let lastMove = null;
+        let currentPlayer = 1;
+        let gameActive = false;
+        let moveCount = 0;
+
+        let timerInterval = null;
+        let timeRemaining = 60;
+        let moveStartTime = null;
+
+        let settings = {
+            blackName: '黑棋',
+            whiteName: '白棋',
+            timeLimit: 60
+        };
+
+        let scores = { black: 0, white: 0 };
+        let gameRecord = [];
+        let canvas, ctx;
+
+        // ==================== 初始化 ====================
+        window.onload = function() {
+            canvas = document.getElementById('boardCanvas');
+            const size = CELL_SIZE * (BOARD_SIZE - 1) + BOARD_PADDING * 2;
+            canvas.width = size;
+            canvas.height = size;
+            ctx = canvas.getContext('2d');
+
+            canvas.addEventListener('click', onBoardClick);
+            loadFromStorage();
+            newGame();
+        };
+
+        // ==================== 棋盘操作 ====================
+        function initBoard() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+            moveHistory = [];
+            lastMove = null;
+            moveCount = 0;
+            gameRecord = [];
+        }
+
+        function drawBoard() {
+            ctx.fillStyle = '#DEB887';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#8B7355';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(BOARD_PADDING, BOARD_PADDING + i * CELL_SIZE);
+                ctx.lineTo(BOARD_PADDING + (BOARD_SIZE - 1) * CELL_SIZE, BOARD_PADDING + i * CELL_SIZE);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(BOARD_PADDING + i * CELL_SIZE, BOARD_PADDING);
+                ctx.lineTo(BOARD_PADDING + i * CELL_SIZE, BOARD_PADDING + (BOARD_SIZE - 1) * CELL_SIZE);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#5D4E37';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                const colLabel = String.fromCharCode(65 + i);
+                ctx.fillText(colLabel, BOARD_PADDING + i * CELL_SIZE, BOARD_PADDING - 18);
+                ctx.fillText(colLabel, BOARD_PADDING + i * CELL_SIZE, BOARD_PADDING + (BOARD_SIZE - 1) * CELL_SIZE + 18);
+
+                const rowLabel = (i + 1).toString();
+                ctx.fillText(rowLabel, BOARD_PADDING - 18, BOARD_PADDING + i * CELL_SIZE);
+                ctx.fillText(rowLabel, BOARD_PADDING + (BOARD_SIZE - 1) * CELL_SIZE + 18, BOARD_PADDING + i * CELL_SIZE);
+            }
+
+            const starPoints = [[7, 7], [3, 3], [3, 11], [11, 3], [11, 11]];
+            starPoints.forEach(([r, c]) => {
+                ctx.fillStyle = '#5D4E37';
+                ctx.beginPath();
+                ctx.arc(BOARD_PADDING + c * CELL_SIZE, BOARD_PADDING + r * CELL_SIZE, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            moveHistory.forEach((move, index) => {
+                drawStone(move.row, move.col, move.player, index === moveHistory.length - 1);
+            });
+        }
+
+        function drawStone(row, col, player, isLast) {
+            const x = BOARD_PADDING + col * CELL_SIZE;
+            const y = BOARD_PADDING + row * CELL_SIZE;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(x + 2, y + 2, STONE_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (player === 1) {
+                const gradient = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, STONE_RADIUS);
+                gradient.addColorStop(0, '#666');
+                gradient.addColorStop(1, '#000');
+                ctx.fillStyle = gradient;
+            } else {
+                const gradient = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, STONE_RADIUS);
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(1, '#ccc');
+                ctx.fillStyle = gradient;
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, STONE_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = player === 1 ? '#000' : '#999';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            if (isLast) {
+                ctx.fillStyle = '#FF4444';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function onBoardClick(e) {
+            if (!gameActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const col = Math.round((x - BOARD_PADDING) / CELL_SIZE);
+            const row = Math.round((y - BOARD_PADDING) / CELL_SIZE);
+
+            if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+                if (board[row][col] === 0) {
+                    placeStone(row, col);
+                }
+            }
+        }
+
+        function placeStone(row, col) {
+            const thinkingTime = stopTimer();
+
+            board[row][col] = currentPlayer;
+            moveCount++;
+
+            const colLabel = String.fromCharCode(65 + col);
+            const coordinate = `${colLabel}${row + 1}`;
+
+            const record = {
+                moveNumber: moveCount,
+                player: currentPlayer,
+                playerName: currentPlayer === 1 ? settings.blackName : settings.whiteName,
+                coordinate: coordinate,
+                row: row,
+                col: col,
+                thinkingTime: thinkingTime
+            };
+            gameRecord.push(record);
+            moveHistory.push({ row, col, player: currentPlayer });
+            lastMove = { row, col };
+
+            drawBoard();
+            addRecordToUI(record);
+
+            // 检查胜利
+            if (checkWinner(row, col, currentPlayer)) {
+                gameActive = false;
+                const winnerName = currentPlayer === 1 ? settings.blackName : settings.whiteName;
+
+                if (currentPlayer === 1) {
+                    scores.black++;
+                } else {
+                    scores.white++;
+                }
+                updateScoreDisplay();
+                saveToStorage();
+
+                // 显示获胜对话框
+                showGameOverModal(
+                    '🎉',
+                    '恭喜获胜！',
+                    `${winnerName} 五子连珠，赢得本局！\n\n是否开始下一局？`
+                );
+                return;
+            }
+
+            // 检查平局
+            if (isBoardFull()) {
+                gameActive = false;
+                
+                showGameOverModal(
+                    '🤝',
+                    '平局！',
+                    '棋盘已满，本局平局！\n\n是否开始下一局？'
+                );
+                return;
+            }
+
+            // 切换玩家
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updatePlayerDisplay();
+
+            moveStartTime = Date.now();
+            startTimer();
+        }
+
+        function checkWinner(row, col, player) {
+            const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+
+            for (const [dr, dc] of directions) {
+                let count = 1;
+
+                for (let i = 1; i < 5; i++) {
+                    const r = row + dr * i;
+                    const c = col + dc * i;
+                    if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+
+                for (let i = 1; i < 5; i++) {
+                    const r = row - dr * i;
+                    const c = col - dc * i;
+                    if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+
+                if (count >= 5) return true;
+            }
+            return false;
+        }
+
+        function isBoardFull() {
+            return board.every(row => row.every(cell => cell !== 0));
+        }
+
+        // ==================== 游戏结束对话框 ====================
+        function showGameOverModal(icon, title, message) {
+            document.getElementById('modalIcon').textContent = icon;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        function closeGameOverModal() {
+            document.getElementById('gameOverModal').classList.remove('active');
+        }
+
+        function startNewGameFromModal() {
+            closeGameOverModal();
+            newGame();
+        }
+
+        // ==================== 计时器 ====================
+        function startTimer() {
+            timeRemaining = settings.timeLimit;
+            updateTimerDisplay();
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - moveStartTime) / 1000;
+                timeRemaining = Math.max(0, settings.timeLimit - elapsed);
+
+                updateTimerDisplay();
+
+                if (timeRemaining <= 0) {
+                    onTimeout();
+                }
+            }, 100);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            if (moveStartTime) {
+                return (Date.now() - moveStartTime) / 1000;
+            }
+            return 0;
+        }
+
+        function onTimeout() {
+            gameActive = false;
+            stopTimer();
+
+            const winner = currentPlayer === 1 ? 2 : 1;
+            const winnerName = winner === 1 ? settings.blackName : settings.whiteName;
+            const loserName = currentPlayer === 1 ? settings.blackName : settings.whiteName;
+
+            if (winner === 1) {
+                scores.black++;
+            } else {
+                scores.white++;
+            }
+            updateScoreDisplay();
+            saveToStorage();
+
+            showGameOverModal(
+                '⏰',
+                '超时判负！',
+                `${loserName} 思考超时！\n${winnerName} 获胜！\n\n是否开始下一局？`
+            );
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeRemaining / 60);
+            const secs = Math.floor(timeRemaining % 60);
+            const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            const timerEl = document.getElementById('timerDisplay');
+            timerEl.textContent = timeStr;
+
+            timerEl.className = 'timer-time';
+            if (timeRemaining <= 10) {
+                timerEl.classList.add('danger');
+            } else if (timeRemaining <= 30) {
+                timerEl.classList.add('warning');
+            }
+        }
+
+        // ==================== UI更新 ====================
+        function updatePlayerDisplay() {
+            document.getElementById('blackPlayer').className = 'player-row' + (currentPlayer === 1 ? ' active' : '');
+            document.getElementById('whitePlayer').className = 'player-row' + (currentPlayer === 2 ? ' active' : '');
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('blackScore').textContent = scores.black;
+            document.getElementById('whiteScore').textContent = scores.white;
+        }
+
+        function updateNamesDisplay() {
+            document.getElementById('blackName').textContent = settings.blackName;
+            document.getElementById('whiteName').textContent = settings.whiteName;
+            document.getElementById('timerLimit').textContent = `每步限时: ${settings.timeLimit}秒`;
+        }
+
+        function addRecordToUI(record) {
+            const recordList = document.getElementById('recordList');
+            const div = document.createElement('div');
+            div.className = 'record-item';
+
+            const playerClass = record.player === 1 ? 'black' : 'white';
+            const stone = record.player === 1 ? '●' : '○';
+
+            div.innerHTML = `
+                <span class="record-number">#${record.moveNumber}</span>
+                <span class="record-player ${playerClass}">${stone} ${record.playerName}</span>
+                <span class="record-pos">${record.coordinate}</span>
+                <span class="record-time">${record.thinkingTime.toFixed(1)}s</span>
+            `;
+
+            recordList.appendChild(div);
+            recordList.scrollTop = recordList.scrollHeight;
+        }
+
+        function clearRecordUI() {
+            document.getElementById('recordList').innerHTML = '';
+        }
+
+        // ==================== 游戏操作 ====================
+        function newGame() {
+            initBoard();
+            currentPlayer = 1;
+            gameActive = true;
+
+            clearRecordUI();
+            drawBoard();
+            updatePlayerDisplay();
+
+            moveStartTime = Date.now();
+            startTimer();
+        }
+
+        function undoMove() {
+            if (!gameActive) {
+                alert('游戏已结束，无法悔棋');
+                return;
+            }
+
+            if (moveCount === 0) {
+                alert('还没有落子，无法悔棋');
+                return;
+            }
+
+            for (let i = 0; i < 2 && moveHistory.length > 0; i++) {
+                const last = moveHistory.pop();
+                board[last.row][last.col] = 0;
+                gameRecord.pop();
+                moveCount--;
+            }
+
+            lastMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
+
+            drawBoard();
+
+            clearRecordUI();
+            gameRecord.forEach(record => addRecordToUI(record));
+
+            currentPlayer = moveCount % 2 === 0 ? 1 : 2;
+            updatePlayerDisplay();
+
+            moveStartTime = Date.now();
+            startTimer();
+        }
+
+        function resign() {
+            if (!gameActive) {
+                alert('游戏已结束');
+                return;
+            }
+
+            if (confirm('确定要认输吗？')) {
+                gameActive = false;
+                stopTimer();
+
+                const winner = currentPlayer === 1 ? 2 : 1;
+                const winnerName = winner === 1 ? settings.blackName : settings.whiteName;
+                const loserName = currentPlayer === 1 ? settings.blackName : settings.whiteName;
+
+                if (winner === 1) {
+                    scores.black++;
+                } else {
+                    scores.white++;
+                }
+                updateScoreDisplay();
+                saveToStorage();
+
+                showGameOverModal(
+                    '🏳️',
+                    '认输！',
+                    `${loserName} 选择认输！\n${winnerName} 获胜！\n\n是否开始下一局？`
+                );
+            }
+        }
+
+        // ==================== 设置 ====================
+        function showSettings() {
+            document.getElementById('inputBlackName').value = settings.blackName;
+            document.getElementById('inputWhiteName').value = settings.whiteName;
+            document.getElementById('inputTimeLimit').value = settings.timeLimit;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function setTimeLimit(seconds) {
+            document.getElementById('inputTimeLimit').value = seconds;
+        }
+
+        function saveSettings() {
+            const blackName = document.getElementById('inputBlackName').value.trim() || '黑棋';
+            const whiteName = document.getElementById('inputWhiteName').value.trim() || '白棋';
+            const timeLimit = parseInt(document.getElementById('inputTimeLimit').value) || 60;
+
+            if (timeLimit < 10 || timeLimit > 600) {
+                alert('时间范围应在10-600秒之间');
+                return;
+            }
+
+            settings.blackName = blackName;
+            settings.whiteName = whiteName;
+            settings.timeLimit = timeLimit;
+
+            updateNamesDisplay();
+            saveToStorage();
+            closeSettings();
+        }
+
+        // ==================== 导出 ====================
+        function exportTXT() {
+            if (gameRecord.length === 0) {
+                alert('没有可导出的记录');
+                return;
+            }
+
+            let content = '='.repeat(50) + '\n';
+            content += '           五子棋对局记录\n';
+            content += '='.repeat(50) + '\n';
+            content += `黑棋: ${settings.blackName}\n`;
+            content += `白棋: ${settings.whiteName}\n`;
+            content += `每步限时: ${settings.timeLimit}秒\n`;
+            content += '-'.repeat(50) + '\n\n';
+            content += '落子记录:\n';
+            content += '-'.repeat(50) + '\n';
+            content += '#'.padEnd(6) + '棋手'.padEnd(14) + '坐标'.padEnd(8) + '思考时间\n';
+            content += '-'.repeat(50) + '\n';
+
+            gameRecord.forEach(r => {
+                const stone = r.player === 1 ? '黑棋' : '白棋';
+                content += `${r.moveNumber}`.padEnd(6);
+                content += `${r.playerName}(${stone})`.padEnd(14);
+                content += `${r.coordinate}`.padEnd(8);
+                content += `${r.thinkingTime.toFixed(1)}秒\n`;
+            });
+
+            content += '-'.repeat(50) + '\n';
+            content += `总手数: ${gameRecord.length}\n`;
+            content += '='.repeat(50) + '\n';
+
+            downloadFile(content, 'gomoku_record.txt', 'text/plain');
+        }
+
+        function exportJSON() {
+            if (gameRecord.length === 0) {
+                alert('没有可导出的记录');
+                return;
+            }
+
+            const data = {
+                gameInfo: {
+                    blackName: settings.blackName,
+                    whiteName: settings.whiteName,
+                    timeLimit: settings.timeLimit
+                },
+                moves: gameRecord.map(r => ({
+                    moveNumber: r.moveNumber,
+                    player: r.player === 1 ? 'Black' : 'White',
+                    playerName: r.playerName,
+                    coordinate: r.coordinate,
+                    thinkingTime: parseFloat(r.thinkingTime.toFixed(1))
+                })),
+                result: {
+                    totalMoves: gameRecord.length
+                }
+            };
+
+            const content = JSON.stringify(data, null, 2);
+            downloadFile(content, 'gomoku_record.json', 'application/json');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType + ';charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== 本地存储 ====================
+        function saveToStorage() {
+            localStorage.setItem('gomoku_settings', JSON.stringify(settings));
+            localStorage.setItem('gomoku_scores', JSON.stringify(scores));
+        }
+
+        function loadFromStorage() {
+            const savedSettings = localStorage.getItem('gomoku_settings');
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+            }
+
+            const savedScores = localStorage.getItem('gomoku_scores');
+            if (savedScores) {
+                scores = JSON.parse(savedScores);
+            }
+
+            updateNamesDisplay();
+            updateScoreDisplay();
+        }
+    </script>
+</body>
+</html>
